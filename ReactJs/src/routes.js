@@ -1,21 +1,37 @@
-import React from 'react';
-import { Route, IndexRoute } from 'react-router';
-import App from './containers/App';
-import NotFoundPage from './containers/NotFoundPage.js';
-import LoginPage from './containers/LoginPage';
-import FormPage from './containers/FormPage';
-import TablePage from './containers/TablePage';
-import Dashboard from './containers/DashboardPage';
+import { Navigate, useRoutes } from 'react-router-dom';
+// layouts
+import DashboardLayout from './layouts/dashboard';
+import LogoOnlyLayout from './layouts/LogoOnlyLayout';
+//
+import Login from './pages/Login';
+import Register from './pages/Register';
+import DashboardApp from './pages/DashboardApp';
+import Products from './pages/Products';
+import Blog from './pages/Blog';
+import User from './pages/User';
+import NotFound from './pages/Page404';
 
-export default (
-  <Route>
-    <Route path="login" component={LoginPage}/>
-    <Route path="/" component={App}>
-      <IndexRoute component={Dashboard}/>
-      <Route path="dashboard" component={Dashboard}/>
-      <Route path="form" component={FormPage}/>
-      <Route path="table" component={TablePage}/>
-      <Route path="*" component={NotFoundPage}/>
-    </Route>
-  </Route>
-);
+// ----------------------------------------------------------------------
+
+export default function Router() {
+  return useRoutes([
+    {
+      path: '/dashboard',
+      element: <DashboardLayout />,
+      children: [
+        { path: 'user', element: <User /> },
+      ]
+    },
+    {
+      path: '/',
+      element: <LogoOnlyLayout />,
+      children: [
+        { path: '/', element: <Navigate to="/login" /> },
+        { path: 'login', element: <Login /> },
+        { path: 'register', element: <Register /> },
+        { path: '*', element: <Navigate to="/404" /> }
+      ]
+    },
+    { path: '*', element: <Navigate to="/404" replace /> }
+  ]);
+}

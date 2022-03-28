@@ -2,18 +2,50 @@
 
 namespace App\Controller;
 
+use App\Enum\TokenType;
+use App\Repository\AuthTokenRepository;
+use Monolog\DateTimeImmutable;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 
-abstract class Controller extends AbstractController
+abstract class Controller extends AbstractController implements TokenAuthenticatedController
 {
     protected array $aError = [
         "success" => false,
         "message" => null,
         "code" => null,
     ];
+
+    public function authenticate($oHeaders, AuthTokenRepository $oTokenRepository) : array {
+        $aAuthorization = $oHeaders->all("Authorization");
+
+        if (!$aAuthorization || empty($aAuthorization) || !str_contains($aAuthorization[0], "Bearer ")){
+            $aError = $this->aError;
+            $aError["message"] = json_encode(["authentication" => "authentication failed"]);
+            $aError["code"] = Response::HTTP_BAD_REQUEST;
+            return $aError;
+        }
+
+        $sBearer = substr($aAuthorization[0], 7);
+
+        $oAccessToken = $oTokenRepository->findOneBy(["token" => $sBearer, "type" => TokenType::ACCESS]);
+
+        if (!$oAccessToken || $oAccessToken->getValidUntil() < (new DateTimeImmutable('now'))){
+            $aError = $this->aError;
+            $aError["message"] = json_encode(["authentication" => "authentication failed"]);
+            $aError["code"] = Response::HTTP_BAD_REQUEST;
+            return $aError;
+        }
+
+        $aSuccess = [
+            "success" => true,
+            "accessToken" => $oAccessToken,
+        ];
+
+        return $aSuccess;
+    }
 
     public function jsonResponse($sMessage, $iCode) : Response {
         $oResponse = new Response($sMessage, $iCode);

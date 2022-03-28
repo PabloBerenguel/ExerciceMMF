@@ -1,17 +1,30 @@
-/* eslint-disable import/default */
+// scroll bar
+import 'simplebar/src/simplebar.css';
 
-import React from 'react';
-import { render } from 'react-dom';
-import { Router, browserHistory } from 'react-router';
-import routes from './routes';
-import injectTapEventPlugin from 'react-tap-event-plugin';
-require('./favicon.ico');
-import './styles.scss';
-import 'font-awesome/css/font-awesome.css';
-import 'flexboxgrid/css/flexboxgrid.css';
+import ReactDOM from 'react-dom';
+import { BrowserRouter } from 'react-router-dom';
+import { HelmetProvider } from 'react-helmet-async';
 
-injectTapEventPlugin();
+//
+import App from './App';
+import * as serviceWorker from './serviceWorker';
+import reportWebVitals from './reportWebVitals';
 
-render(
-    <Router routes={routes} history={browserHistory} />, document.getElementById('app')
+// ----------------------------------------------------------------------
+
+ReactDOM.render(
+  <HelmetProvider>
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
+  </HelmetProvider>,
+  document.getElementById('root')
 );
+
+// If you want to enable client cache, register instead.
+serviceWorker.unregister();
+
+// If you want to start measuring performance in your app, pass a function
+// to log results (for example: reportWebVitals(console.log))
+// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
+reportWebVitals();

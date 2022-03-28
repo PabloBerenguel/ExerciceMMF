@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\AuthToken;
 use App\Entity\User;
 use App\Enum\Role;
+use App\Repository\AuthTokenRepository;
 use App\Repository\UserRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\HttpFoundation\Response;
@@ -16,11 +17,13 @@ class UserController extends Controller
 {
     protected ?UserRepository $oUserRepository = null;
     protected ?ManagerRegistry $oDoctrine = null;
+    protected ?AuthTokenRepository $oAuthTokenRepository = null;
 
-    public function __construct(UserRepository $oUserRepository, ManagerRegistry $oDoctrine)
+    public function __construct(UserRepository $oUserRepository, ManagerRegistry $oDoctrine, AuthTokenRepository $oAuthTokenRepository)
     {
         $this->oUserRepository = $oUserRepository;
         $this->oDoctrine = $oDoctrine;
+        $this->oAuthTokenRepository = $oAuthTokenRepository;
     }
 
     /**
@@ -70,11 +73,15 @@ class UserController extends Controller
         $oEntityManager->persist($oUser);
         $oEntityManager->flush();
 
-        return $this->jsonResponse(json_encode(["user" => ["email" => $aCleanData["email"]]]), Response::HTTP_OK);
-
+        return $this->jsonResponse(json_encode([
+            "id" => $oUser->getId(),
+            "email" => $oUser->getEmail(),
+            "first_name" => $oUser->getFirstName(),
+            "last_name" => $oUser->getLastName(),
+        ]), Response::HTTP_OK);
     }
 
-    private function passwordComplexity(string $sPassword){
+    private function passwordComplexity(string $sPassword): array {
         $aResult = ["success" => true];
 
         if (strlen($sPassword) < User::PASSWORD_LENGTH)
@@ -100,5 +107,26 @@ class UserController extends Controller
         ///$sSalt = $this->getParameter("app.salt"); /// TODO: Set up in .env
         $sSalt = "SALTSALTSALT";
         return md5($sPassword.$sSalt);
+    }
+
+    /**
+     * @Route("/api/users", name="UserController.get", methods={"GET"})
+     */
+    public function get(Request $oRequest) : Response {
+        $aLoggedUserData = $this->authenticate($oRequest->headers, $this->oAuthTokenRepository);
+        if (!$aLoggedUserData["success"])
+            return $this->jsonResponse($aLoggedUserData["message"], $aLoggedUserData["code"]);
+        /// TODO: Missing pagination
+        $aUsers = $this->oUserRepository->findAll();
+        $aUsersData = [];
+        foreach ($aUsers as $oUser){
+            $aUsersData[] = [
+                "id" => $oUser->getId(),
+                "email" => $oUser->getEmail(),
+                "first_name" => $oUser->getFirstName(),
+                "last_name" => $oUser->getLastName(),
+            ];
+        }
+        return $this->jsonResponse(json_encode($aUsersData), Response::HTTP_OK);
     }
 }
