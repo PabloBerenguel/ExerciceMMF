@@ -7,6 +7,7 @@ The front is made in ReactJs with the template: `https://github.com/minimal-ui-k
 ### Installation
 
 1 - run `yarn install` inside the folder ReactJs
+
 2 - run `yarn start`
 
 ## Back
@@ -15,10 +16,15 @@ The back is made in Symfony from `https://symfony.com/doc/current/setup.html`
 
 ### Installation
 1 - install ddev https://ddev.readthedocs.io/en/stable/
+
 2 - run `ddev config` inside the folder Symfony6 press enter until the end of the process
+
 3 - run `ddev start` wait for the container to start
+
 4 - run `ddev ssh`
+
 5 - Install symfony and required packages: `composer install && composer update`
+
 6 - Run migrations: `php bin/console doctrine:schema:update --force`
 
 ### Routes
